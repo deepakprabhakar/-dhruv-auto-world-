@@ -1,9 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import {
-  onAuthStateChanged, signInWithPopup,
-  signInWithRedirect, getRedirectResult, signOut
-} from 'firebase/auth';
-import { auth, googleProvider } from '../firebase/config';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../firebase/config';
 
 const AuthContext = createContext(null);
 
@@ -12,33 +9,20 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getRedirectResult(auth).catch(() => {});
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
       setLoading(false);
     });
-    return unsubscribe;
+    return unsub;
   }, []);
-
-  const loginWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch {
-      await signInWithRedirect(auth, googleProvider);
-    }
-  };
 
   const logout = () => signOut(auth);
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );
 }
 
 export const useAuth = () => useContext(AuthContext);
-```
-
-Press **Ctrl+S** → then run these in terminal:
-```
